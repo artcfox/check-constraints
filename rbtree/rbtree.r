@@ -46,7 +46,7 @@
 static inline void LeftRotate(rbtree_t *self, rbtree_node_t *x) {
   rbtree_node_t *y = x->right;
   x->right = y->left;
-  if (y->left != self->nil) 
+  if (y->left != self->nil)
     y->left->parent = x;
   y->parent = x->parent;
   if (x->parent == self->nil)

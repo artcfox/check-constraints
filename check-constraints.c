@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     return -1;
 
   // Create a red-black tree to use as a set for keeping track of the unique pixels per row
-  const pixel_node_t myNil;
+  pixel_node_t myNil;
   rbtree_node_t *myNilRef = (rbtree_node_t *)&myNil;
   rbtree_t tree;
   rbtree_init(&tree, myNilRef, sizeof(pixel_node_t), pixel_node_compare);

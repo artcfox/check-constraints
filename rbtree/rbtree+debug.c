@@ -39,42 +39,74 @@
 
 #include "rbtree+debug.h"
 
-void rbtree_print_dot_null(rbtree_node_t *key, int nullcount, FILE *stream)
+void rbtree_print_dot_nil(rbtree_node_t *node, int nilcount, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
 {
-  fprintf(stream, "    \"null%d\" [shape=point];\n", nullcount);
-  fprintf(stream, "    \"%p\" -> \"null%d\";\n", key, nullcount);
+  fprintf(stream, "    \"nil%u\" [shape=point];\n", nilcount);
+  fprintf(stream, "    \"");
+  PrintNodeFunc(stream, node);
+  fprintf(stream, "\" -> \"nil%u\";\n", nilcount);
 }
 
-void rbtree_print_dot_aux(rbtree_t *self, rbtree_node_t *node, FILE *stream)
+void rbtree_print_dot_aux(rbtree_t *self, rbtree_node_t *node, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
 {
-  static int nullcount = 0;
+  static unsigned int nilcount = 0;
 
   if (node->left != self->nil) {
-    fprintf(stream, "    \"%p\" -> \"%p\";\n", node/*->key*/, node->left/*->key*/);
-    rbtree_print_dot_aux(self, node->left, stream);
+    fprintf(stream, "    \"");
+    PrintNodeFunc(stream, node);
+    fprintf(stream, "\" -> \"");
+    PrintNodeFunc(stream, node->left);
+    fprintf(stream, "\";\n");
+    rbtree_print_dot_aux(self, node->left, stream, PrintNodeFunc);
+  } else {
+    rbtree_print_dot_nil(node, nilcount++, stream, PrintNodeFunc);
   }
-  else
-    rbtree_print_dot_null(node/*->key*/, nullcount++, stream);
 
   if (node->right != self->nil) {
-    fprintf(stream, "    \"%p\" -> \"%p\";\n", node/*->key*/, node->right/*->key*/);
-    rbtree_print_dot_aux(self, node->right, stream);
+    fprintf(stream, "    \"");
+    PrintNodeFunc(stream, node);
+    fprintf(stream, "\" -> \"");
+    PrintNodeFunc(stream, node->right);
+    fprintf(stream, "\";\n");
+    rbtree_print_dot_aux(self, node->right, stream, PrintNodeFunc);
+  } else {
+    rbtree_print_dot_nil(node, nilcount++, stream, PrintNodeFunc);
   }
-  else
-    rbtree_print_dot_null(node/*->key*/, nullcount++, stream);
 }
 
-void rbtree_print_dot(rbtree_t *self, FILE *stream)
+void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
 {
   fprintf(stream, "digraph BST {\n");
-  fprintf(stream, "    node [fontname=\"Arial\"];\n");
+  fprintf(stream, "    node [style=filled fillcolor=black fontcolor=white];\n");
 
-  if (self->root == self->nil)
+  if (self->root == self->nil) {
     fprintf(stream, "\n");
-  else if (self->root->right == self->nil && self->root->left == self->nil)
-    fprintf(stream, "    \"%p\";\n", self->root/*->key*/);
-  else
-    rbtree_print_dot_aux(self, self->root, stream);
+  } else if (self->root->right == self->nil && self->root->left == self->nil) {
+    fprintf(stream, "    \"");
+    PrintNodeFunc(stream, self->root);
+    fprintf(stream, "\";\n");
+  } else {
+    rbtree_print_dot_aux(self, self->root, stream, PrintNodeFunc);
+  }
+
+  // List all red nodes so they can be colored red. Do this last to preserve the left to right ordering
+  rbtree_node_t *firstRedNode = 0;
+  for (rbtree_node_t *itr = rbtree_minimum(self); itr != self->nil; itr = rbtree_successor(self, itr))
+    if (itr->color == RBTREE_NODE_COLOR_RED) {
+      if (!firstRedNode) {
+        firstRedNode = itr;
+        fprintf(stream, "    ");
+        continue; // print the first red node last, to avoid an invalid trailing comma
+      }
+      fprintf(stream, "\"");
+      PrintNodeFunc(stream, itr);
+      fprintf(stream, "\", ");
+    }
+  if (firstRedNode) {
+    fprintf(stream, "\"");
+    PrintNodeFunc(stream, firstRedNode);
+    fprintf(stream, "\" [fillcolor=red];\n");
+  }
 
   fprintf(stream, "}\n");
 }

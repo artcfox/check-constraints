@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 
 #if defined(DEBUG_RBTREE)
     fprintf(stdout, "\n\n\n");
-    rbtree_print_dot(&tree, stdout);
+    rbtree_print_dot(&tree, stdout, pixel_node_print);
     fprintf(stdout, "\n\n\n");
 #endif
 

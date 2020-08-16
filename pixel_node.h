@@ -45,7 +45,7 @@ int pixel_node_compare(const rbtree_node_t *x, const rbtree_node_t *y)
     return 1;
 }
 
-void pixel_node_print(const rbtree_node_t *self, FILE *stream)
+void pixel_node_print(FILE *stream, const rbtree_node_t *self)
 {
   uint8_t Rx = ((const pixel_node_t *)self)->pixel.r;
   uint8_t Gx = ((const pixel_node_t *)self)->pixel.g;

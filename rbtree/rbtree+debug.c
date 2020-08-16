@@ -6,7 +6,7 @@
   Red-Black Tree implementation that generate .dot files which can be
   used to visualize the tree.
 
-  To turn the .dot files into a .png file use the command:
+  To turn a .dot file into a .png file use the command:
     dot -Tpng input.dot -o output.png
 
   Copyright 2020 Matthew T. Pandina. All rights reserved.
@@ -39,57 +39,45 @@
 
 #include "rbtree+debug.h"
 
-void rbtree_print_dot_nil(rbtree_node_t *node, int nilcount, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
-{
-  fprintf(stream, "    \"nil%u\" [shape=point];\n", nilcount);
-  fprintf(stream, "    \"");
-  PrintNodeFunc(stream, node);
-  fprintf(stream, "\" -> \"nil%u\";\n", nilcount);
+static void PrintDotNil(rbtree_node_t *node, int nilcount, FILE *stream) {
+  fprintf(stream, "    \"nil%u\" [shape=point];\n    \"%p\" -> \"nil%u\";\n", nilcount, node, nilcount);
 }
 
-void rbtree_print_dot_aux(rbtree_t *self, rbtree_node_t *node, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
-{
+static void PrintDotAux(rbtree_t *self, rbtree_node_t *node, FILE *stream) {
   static unsigned int nilcount = 0;
 
   if (node->left != self->nil) {
-    fprintf(stream, "    \"");
-    PrintNodeFunc(stream, node);
-    fprintf(stream, "\" -> \"");
-    PrintNodeFunc(stream, node->left);
-    fprintf(stream, "\";\n");
-    rbtree_print_dot_aux(self, node->left, stream, PrintNodeFunc);
-  } else {
-    rbtree_print_dot_nil(node, nilcount++, stream, PrintNodeFunc);
-  }
+    fprintf(stream, "    \"%p\" -> \"%p\";\n", node, node->left);
+    PrintDotAux(self, node->left, stream);
+  } else
+    PrintDotNil(node, nilcount++, stream);
 
   if (node->right != self->nil) {
-    fprintf(stream, "    \"");
-    PrintNodeFunc(stream, node);
-    fprintf(stream, "\" -> \"");
-    PrintNodeFunc(stream, node->right);
-    fprintf(stream, "\";\n");
-    rbtree_print_dot_aux(self, node->right, stream, PrintNodeFunc);
-  } else {
-    rbtree_print_dot_nil(node, nilcount++, stream, PrintNodeFunc);
-  }
+    fprintf(stream, "    \"%p\" -> \"%p\";\n", node, node->right);
+    PrintDotAux(self, node->right, stream);
+  } else
+    PrintDotNil(node, nilcount++, stream);
 }
 
-void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n))
-{
-  fprintf(stream, "digraph BST {\n");
-  fprintf(stream, "    node [style=filled fillcolor=black fontcolor=white];\n");
+void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n)) {
+  fprintf(stream, "digraph BST {\n    node [style=filled fillcolor=black fontcolor=white];\n");
 
-  if (self->root == self->nil) {
+  if (self->root == self->nil)
     fprintf(stream, "\n");
-  } else if (self->root->right == self->nil && self->root->left == self->nil) {
-    fprintf(stream, "    \"");
-    PrintNodeFunc(stream, self->root);
-    fprintf(stream, "\";\n");
-  } else {
-    rbtree_print_dot_aux(self, self->root, stream, PrintNodeFunc);
-  }
+  else if (self->root->right == self->nil && self->root->left == self->nil)
+    fprintf(stream, "    \"%p\";\n", self->root);
+  else
+    PrintDotAux(self, self->root, stream);
 
-  // List all red nodes so they can be colored red. Do this last to preserve the left to right ordering
+  // Label the nodes
+  if (PrintNodeFunc)
+    for (rbtree_node_t *itr = rbtree_minimum(self); itr != self->nil; itr = rbtree_successor(self, itr)) {
+      fprintf(stream, "    \"%p\" [label=\"", itr);
+      PrintNodeFunc(stream, itr);
+      fprintf(stream, "\"];\n");
+    }
+
+  // Color red nodes
   rbtree_node_t *firstRedNode = 0;
   for (rbtree_node_t *itr = rbtree_minimum(self); itr != self->nil; itr = rbtree_successor(self, itr))
     if (itr->color == RBTREE_NODE_COLOR_RED) {
@@ -98,15 +86,10 @@ void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *
         fprintf(stream, "    ");
         continue; // print the first red node last, to avoid an invalid trailing comma
       }
-      fprintf(stream, "\"");
-      PrintNodeFunc(stream, itr);
-      fprintf(stream, "\", ");
+      fprintf(stream, "\"%p\", ", itr);
     }
-  if (firstRedNode) {
-    fprintf(stream, "\"");
-    PrintNodeFunc(stream, firstRedNode);
-    fprintf(stream, "\" [fillcolor=red];\n");
-  }
+  if (firstRedNode)
+    fprintf(stream, "\"%p\" [fillcolor=red];\n", firstRedNode);
 
   fprintf(stream, "}\n");
 }

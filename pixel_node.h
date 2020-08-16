@@ -4,6 +4,7 @@
 
 #include "rbtree/rbtree.h"
 #include "rbtree/rbtree+setinsert.h"
+#include "rbtree/rbtree+debug.h"
 
 struct PIXEL_DATA;
 typedef struct PIXEL_DATA PIXEL_DATA;
@@ -42,4 +43,13 @@ int pixel_node_compare(const rbtree_node_t *x, const rbtree_node_t *y)
     return -1;
   else
     return 1;
+}
+
+void pixel_node_print(const rbtree_node_t *self, FILE *stream)
+{
+  uint8_t Rx = ((const pixel_node_t *)self)->pixel.r;
+  uint8_t Gx = ((const pixel_node_t *)self)->pixel.g;
+  uint8_t Bx = ((const pixel_node_t *)self)->pixel.b;
+
+  fprintf(stream, "(%u,%u,%u)", Rx, Gx, Bx);
 }

@@ -170,6 +170,12 @@ int main(int argc, char *argv[]) {
         free(p);
     }
 
+#if defined(DEBUG_RBTREE)
+    fprintf(stdout, "\n\n\n");
+    rbtree_print_dot(&tree, stdout);
+    fprintf(stdout, "\n\n\n");
+#endif
+
     // Count the number of unique pixels for a given row (the size of the set)
     int unique_pixel_count = 0;
     for (rbtree_node_t *itr = rbtree_minimum(&tree); itr != myNilRef; itr = rbtree_successor(&tree, itr))

@@ -8,12 +8,12 @@ CFLAGS       = $(COMPILE_LINK) $(DEPGEN) $(C_CXX_FLAGS)
 CFLAGS      += -std=gnu11
 CXXFLAGS     = $(COMPILE_LINK) $(DEPGEN) $(C_CXX_FLAGS)
 CXXFLAGS    += -std=gnu++11
-CPPFLAGS     = 
+#CPPFLAGS     = -DDEBUG_RBTREE
 LDFLAGS      = $(COMPILE_LINK)
 LDFLAGS     += -lpng -lz -lm
 EXECUTABLE  ?= check-constraints
-OBJECTS      = check-constraints.o rbtree/rbtree.o rbtree/rbtree+setinsert.o
-OBJECTS     += 
+OBJECTS      = check-constraints.o
+OBJECTS     += rbtree/rbtree.o rbtree/rbtree+setinsert.o rbtree/rbtree+debug.o
 
 all: $(EXECUTABLE)
 

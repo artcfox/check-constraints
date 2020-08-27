@@ -103,7 +103,7 @@ int decode_png(char* pngfile, uint8_t* buffer, size_t bufferlen, uint32_t* w, ui
   // data now contains the byte data in the format RGB
   int retval = 0;
 
-  if (bufferlen < height * rowbytes) {
+  if (buffer == NULL || bufferlen < height * rowbytes) {
     if (bufferlen != 0)
       fprintf(stderr, "The buffer passed to decode_png is not large enough for '%s'.\n", pngfile);
     *h = height;
@@ -133,17 +133,27 @@ int main(int argc, char *argv[]) {
   }
 
   // Figure out the size of the image
-  uint32_t width;
-  uint32_t height;
+  uint32_t width = 0;
+  uint32_t height = 0;
   (void)decode_png(argv[1], 0, 0, &width, &height);
+
+  if (width * height == 0)
+    return -1;
 
   // Allocate enough memory to hold the decoded image
   size_t bufferlen = width * height * 3;
   uint8_t* buffer = malloc(bufferlen);
 
-  // Decode the image
-  if (decode_png(argv[1], buffer, bufferlen, &width, &height) == -1)
+  if (buffer == NULL) {
+    fprintf(stderr, "Unable to allocate %lu bytes\n", bufferlen);
     return -1;
+  }
+
+  // Decode the image
+  if (decode_png(argv[1], buffer, bufferlen, &width, &height) == -1) {
+    free(buffer);
+    return -1;
+  }
 
   // Create a red-black tree to use as a set for keeping track of the unique pixels per row
   pixel_node_t myNil;
@@ -165,14 +175,14 @@ int main(int argc, char *argv[]) {
       PIXEL_DATA pixel = { *(buffer + h * width * 3 + w * 3 + 0),
                            *(buffer + h * width * 3 + w * 3 + 1),
                            *(buffer + h * width * 3 + w * 3 + 2) };
-      rbtree_node_t* p = pixel_node_new(&pixel);
+      rbtree_node_t *p = pixel_node_new(&pixel);
       if (!rbtree_setinsert(&tree, p))
         free(p);
     }
 
 #if defined(DEBUG_RBTREE)
     fprintf(stdout, "\n\n\n");
-    rbtree_print_dot(&tree, stdout, pixel_node_print);
+    rbtree_print_dot(&tree, stdout, pixel_node_print, 0, 0);
     fprintf(stdout, "\n\n\n");
 #endif
 

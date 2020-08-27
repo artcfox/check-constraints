@@ -41,4 +41,4 @@
 
 #include "rbtree.h"
 
-void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n));
+void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n), char *black_style, char *red_style);

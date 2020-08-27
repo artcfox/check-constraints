@@ -45,11 +45,13 @@ int pixel_node_compare(const rbtree_node_t *x, const rbtree_node_t *y)
     return 1;
 }
 
+// The printing function needs a delimiter character around the label
+// This can be escaped double quotes, or < and > to use supported HTML
+// elements (like <table>).
 void pixel_node_print(FILE *stream, const rbtree_node_t *self)
 {
   uint8_t Rx = ((const pixel_node_t *)self)->pixel.r;
   uint8_t Gx = ((const pixel_node_t *)self)->pixel.g;
   uint8_t Bx = ((const pixel_node_t *)self)->pixel.b;
-
-  fprintf(stream, "(%u,%u,%u)", Rx, Gx, Bx);
+  fprintf(stream, "<<b>%u,%u,%u</b>>", Rx, Gx, Bx);
 }

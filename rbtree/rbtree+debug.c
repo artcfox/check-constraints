@@ -59,8 +59,15 @@ static void PrintDotAux(rbtree_t *self, rbtree_node_t *node, FILE *stream) {
     PrintDotNil(node, nilcount++, stream);
 }
 
-void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n)) {
-  fprintf(stream, "digraph BST {\n    node [style=filled fillcolor=black fontcolor=white];\n");
+void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *s, const rbtree_node_t *n), char *black_style, char *red_style) {
+  char default_black_style[] = "style=filled fillcolor=black fontcolor=white";
+  char default_red_style[] = "fillcolor=red";
+  if (!black_style)
+    black_style = default_black_style;
+  if (!red_style)
+    red_style = default_red_style;
+
+  fprintf(stream, "digraph rbtree {\n    node [%s];\n", black_style);
 
   if (self->root == self->nil)
     fprintf(stream, "\n");
@@ -72,24 +79,24 @@ void rbtree_print_dot(rbtree_t *self, FILE *stream, void (*PrintNodeFunc)(FILE *
   // Label the nodes
   if (PrintNodeFunc)
     for (rbtree_node_t *itr = rbtree_minimum(self); itr != self->nil; itr = rbtree_successor(self, itr)) {
-      fprintf(stream, "    \"%p\" [label=\"", itr);
+      fprintf(stream, "    \"%p\" [label=", itr);
       PrintNodeFunc(stream, itr);
-      fprintf(stream, "\"];\n");
+      fprintf(stream, "];\n");
     }
 
   // Color red nodes
-  rbtree_node_t *firstRedNode = 0;
+  rbtree_node_t *first_red_node = 0;
   for (rbtree_node_t *itr = rbtree_minimum(self); itr != self->nil; itr = rbtree_successor(self, itr))
     if (itr->color == RBTREE_NODE_COLOR_RED) {
-      if (!firstRedNode) {
-        firstRedNode = itr;
+      if (!first_red_node) {
+        first_red_node = itr;
         fprintf(stream, "    ");
-        continue; // print the first red node last, to avoid an invalid trailing comma
+        continue; // print this last, to avoid an invalid trailing comma
       }
       fprintf(stream, "\"%p\", ", itr);
     }
-  if (firstRedNode)
-    fprintf(stream, "\"%p\" [fillcolor=red];\n", firstRedNode);
+  if (first_red_node)
+    fprintf(stream, "\"%p\" [%s];\n", first_red_node, red_style);
 
   fprintf(stream, "}\n");
 }
